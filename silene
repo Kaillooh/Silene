@@ -1,0 +1,54 @@
+#! /usr/bin/python3
+# -*- coding: utf-8 -*-
+__author__    = "Pierre Etheve"
+__email__  = "pierre.etheve.lfdv@gmail.com"
+
+from subprocess import Popen, PIPE, STDOUT
+import argparse
+
+parser = argparse.ArgumentParser(description="Custom dataset builder for Pix2Pix")
+parser.add_argument('-project', '-p', type=str, required=True, help='name of the project')
+parser.add_argument('-step', '-s', type=int, required=True, help='step number')
+parser.add_argument('-iter', '-i0', type=int, required=False, default=200, help="number of iteration with maximum learning rate (specific to step 1 and 4)")
+parser.add_argument('-iter_decay', '-i1', type=int, required=False, default=200, help="number of iteration with decaying learning rate (specific to step 1 and 4)")
+parser.add_argument('-n_render', '-n', type=int, required=False, default=5000, help="number of images to be rendered (specific to step 2 and 5)")
+
+opt = parser.parse_args()
+
+train_option = ""
+
+if opt.step == 1 or opt.step == 4 :
+	if "y" in input("Do you want to resume existing training ? [y/N] ").lower() :
+		train_option = "--continue_train"
+
+step1 = "python train.py --dataroot datasets/%s/struct/ --name %s_struct_pix2pix_mix --model pix2pix --direction AtoB --load_size 384 --crop_size 384 --netG unet_128 --niter %d --niter_decay %d --display_freq 50 %s --dataset_mode anim"%(opt.project, opt.project, opt.iter, opt.iter_decay, train_option)
+step2 = "python test.py --dataroot datasets/%s/struct/ --name %s_struct_pix2pix_mix --model pix2pix --direction AtoB --load_size 384 --crop_size 384 --netG unet_128 --num_test %d --dataset_mode anim"%(opt.project, opt.project, opt.n_render)
+step3 = "./generate_unstigma.py -source datasets/%s/ -results results/%s_struct_pix2pix_mix/"%(opt.project, opt.project)
+step4 = "python train.py --dataroot datasets/%s/unstigma/ --name %s_unstigma_pix2pix_mix --model pix2pix --direction AtoB --load_size 768 --crop_size 384 --netG unet_128 --niter %d --niter_decay %d --display_freq 50 %s --dataset_mode anim"%(opt.project, opt.project, opt.iter, opt.iter_decay, train_option)
+step5 = "python test.py --dataroot datasets/%s/unstigma/ --name %s_unstigma_pix2pix_mix --model pix2pix --direction AtoB --load_size 768 --crop_size 768 --netG unet_128 --dataset_mode anim --num_test %d"%(opt.project, opt.project, opt.n_render)
+
+com_index = {"step1":step1, "step2":step2, "step3":step3, "step4":step4, "step5":step5}
+
+command = com_index["step%d"%opt.step]
+
+print(command)
+
+p = Popen(command, stdout = PIPE, 
+        stderr = STDOUT, shell = True)
+
+
+try :
+	while True:
+	  line = p.stdout.readline()
+
+	  if not line: 
+	  	break
+
+	  # line = str(line)
+	  line = line.decode("utf-8")
+	  line = line.replace("\n", "")
+	  print(line)
+
+except :
+	p.terminate()
+	print("\n\nPix2Pix stopped.")
