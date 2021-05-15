@@ -104,9 +104,14 @@ def get_transform(opt, params=None, grayscale=False, method=Image.BICUBIC, conve
             transform_list.append(transforms.Lambda(lambda img: __flip(img, params['flip'])))
 
     if convert:
-        transform_list += [transforms.ToTensor(),
-                           transforms.Normalize((0.5, 0.5, 0.5),
-                                                (0.5, 0.5, 0.5))]
+        if opt.input_nc == 4 :
+            transform_list += [transforms.ToTensor(),
+                               transforms.Normalize((0.5, 0.5, 0.5, 0.5),
+                                                    (0.5, 0.5, 0.5, 0.5))]
+        else : 
+            transform_list += [transforms.ToTensor(),
+                               transforms.Normalize((0.5, 0.5, 0.5),
+                                                    (0.5, 0.5, 0.5))]
     return transforms.Compose(transform_list)
 
 

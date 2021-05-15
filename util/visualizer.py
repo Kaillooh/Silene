@@ -109,6 +109,16 @@ class Visualizer():
             epoch (int) - - the current epoch
             save_result (bool) - - if save the current results to an HTML file
         """
+
+        print("Visualizer called !")
+
+        for k in visuals.keys() :
+            if visuals[k].shape[1] == 4 :
+                # print("'%s' : "%k, visuals[k].shape)
+                new_tensor = visuals[k][:,0:3,:,:]
+                visuals[k] = new_tensor
+                # print("New shape of '%s' : "%k, new_tensor.shape)
+
         if self.display_id > 0:  # show images in the browser using visdom
             ncols = self.ncols
             if ncols > 0:        # show all the images in one visdom panel

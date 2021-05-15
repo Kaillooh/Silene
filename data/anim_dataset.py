@@ -39,14 +39,26 @@ class AnimDataset(BaseDataset):
         self.input_nc = self.opt.output_nc if self.opt.direction == 'BtoA' else self.opt.input_nc
         self.output_nc = self.opt.input_nc if self.opt.direction == 'BtoA' else self.opt.output_nc
 
+        print("Channels in : %d   out : %d"%(self.input_nc, self.output_nc))
+        print("Preprocess : "+opt.preprocess)
+
     def getTrainItem(self, index) :
         B_path = self.draw_paths[index]
-        B = Image.open(B_path).convert('RGB')
 
         A_path = B_path.replace("/draw/", "/vid/")
         if self.vid_format == "png" :
             A_path = A_path.replace(".jpg", ".png")
-        A = Image.open(A_path).convert('RGB')
+
+        if self.input_nc == 4 :
+            A = Image.open(A_path).convert('RGBA')
+        else :
+            A = Image.open(A_path).convert('RGB')
+
+
+        if self.output_nc == 4 :
+            B = Image.open(B_path).convert('RGBA')
+        else :
+            B = Image.open(B_path).convert('RGB')
 
         # apply the same transform to both A and B
         transform_params = get_params(self.opt, A.size)
@@ -60,7 +72,11 @@ class AnimDataset(BaseDataset):
 
     def getTestItem(self, index) :
         A_path = self.vid_paths[index]
-        A = Image.open(A_path).convert('RGB')
+
+        if self.input_nc == 4 :
+            A = Image.open(A_path).convert('RGBA')
+        else :
+            A = Image.open(A_path).convert('RGB')
 
         # apply the same transform to both A and B
         transform_params = get_params(self.opt, A.size)

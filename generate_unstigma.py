@@ -10,10 +10,15 @@ import shutil
 parser = argparse.ArgumentParser(description="Custom dataset builder for Pix2Pix")
 parser.add_argument('-source', type=str, required=True, help='folder where raw files are located')
 parser.add_argument('-results', type=str, required=True, help='folder where raw files are located')
+parser.add_argument('-variant', type=str, required=False, default="", help='variant of the struct folder')
 opt = parser.parse_args()
 
-struct_draw = os.path.join(opt.source, "struct/draw")
-struct_vid = os.path.join(opt.source, "struct/vid")
+variant = ""
+if opt.variant != "" :
+	variant = "_"+opt.variant
+
+struct_draw = os.path.join(opt.source, "struct%s/draw"%variant)
+struct_vid = os.path.join(opt.source, "struct%s/vid"%variant)
 
 try :
 	shutil.rmtree(os.path.join(opt.source, "unstigma"))
